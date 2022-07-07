@@ -4910,13 +4910,227 @@ function asArray(value) {
   this.layerManager.addLayer(L.tileLayer.provider(provider, options), "tile", layerId, group);
 };
 </script>
+<script>LeafletWidget.methods.imagePopup = function(image, group, width, height, src, name, tooltip, dotlist) {
+
+  var lay = this.layerManager._groupContainers[group];
+
+  //debugger;
+
+  var img = [];
+  for (i = 0; i < image.length; i++) {
+    if (src[i] === "l") {
+      if (name.length === 1) {
+        img[i] = document.getElementById("image" + "-" + group + "-" + name + "-attachment").href;
+      } else {
+        img[i] = document.getElementById("image" + "-" + group + "-" + name[i] + "-attachment").href;
+      }
+    }
+    if (src[i] === "r") {
+      r_img = new Image();
+      r_img.src = image[i];
+      var wh = [];
+      r_img.onload = function () {
+        wh = [r_img.width, r_img.height];
+      };
+      if (width[i] === null & height[i] === null) {
+        width[i] = wh[0]; //r_img.width;
+        height[i] = wh[1]; //r_img.height;
+      } else if (width[i] === null) {
+        xy_ratio = wh[0] / wh[1]; //r_img.width / r_img.height;
+        width[i] = xy_ratio * wh[1]; //height[i];
+      } else if (height[i] === null) {
+        yx_ratio = wh[1] / wh[0]; //r_img.height / r_img.width;
+        height[i] = yx_ratio * wh[0]; //width[i];
+      }
+      img[i] = image[i];
+    }
+  }
+
+  //debugger;
+
+  var imgid = 0;
+  lay.eachLayer(function (layer) {
+
+    if (layer._singleAddRemoveBuffer === undefined) {
+      wdth = width[imgid];
+      hght = height[imgid];
+      if (dotlist.minWidth === undefined) {
+        dotlist.minWidth = wdth;
+      }
+      if (imgid <= image.length) {
+        popimg = "<image src='" + img[imgid] + "'" + " height=" + hght + " width=" + wdth + ">";
+        poporig = layer.getPopup();
+        if (poporig === undefined) {
+          pop = popimg;
+        } else {
+          pop = poporig._content + popimg;
+        }
+
+        if (tooltip === true) {
+          layer.bindTooltip(pop, dotlist); //{ maxWidth: 2000 });
+        } else {
+          layer.bindPopup(pop, dotlist); //{ maxWidth: 2000 });
+        }
+      }
+    }
+
+    if (layer._singleAddRemoveBuffer !== undefined) {
+      var arr = layer._singleAddRemoveBuffer;
+      arr.forEach(function(value) {
+        wdth = width[imgid];
+        hght = height[imgid];
+        if (dotlist.minWidth === undefined) {
+          dotlist.minWidth = wdth;
+        }
+        if (imgid <= image.length) {
+          popimg = "<image src='" + img[imgid] + "'" + " height=" + hght + " width=" + wdth + ">";
+        }
+        poporig = value.layer.getPopup();
+          if (poporig === undefined) {
+            pop = popimg;
+          } else {
+            pop = poporig._content + popimg;
+          }
+        if (tooltip === true) {
+            value.layer.bindTooltip(pop, dotlist); //{ maxWidth: 2000 });
+        } else {
+          value.layer.bindPopup(pop, dotlist); //{ maxWidth: 2000 });
+        }
+        imgid += 1;
+      });
+    }
+
+    //debugger;
+    imgid += 1;
+  });
+
+};
+
+
+LeafletWidget.methods.videoPopup = function(video, group, width, height, name) {
+
+  var lay = this.layerManager._groupContainers[group];
+
+  //debugger;
+
+  var vdo = [];
+  //var vid = [];
+  //var wdth = [];
+  //var hght = [];
+  var vdoid = 0;
+
+  lay.eachLayer(function (layer) {
+
+    if (name.length === 1) {
+      vdo[vdoid] = document.getElementById("video" + "-" + name + "-attachment").href;
+    } else {
+      vdo[vdoid] = document.getElementById("video" + "-" + name[vdoid] + "-attachment").href;
+    }
+
+    //vid[vdoid] = document.createElement('video');
+    var vid = document.createElement('video');
+    var id = 'leafpop-video' + vdoid;
+    vid.setAttribute('id', id);
+    vid.src = vdo[vdoid];
+    vid.controls = true;
+/*
+    if (width[vdoid] === null & height[vdoid] === null) {
+      wdth = vid[vdoid].videoWidth;
+      hght = vid[vdoid].videoHeight;
+    } else if (width[vdoid] === null) {
+      xy_ratio = vid[vdoid].videoWidth / vid[vdoid].videoHeight;
+      wdth = xy_ratio * height[vdoid];
+      hght = height[vdoid];
+    } else if (height[vdoid] === null) {
+      xy_ratio = vid[vdoid].videoHeight / vid[vdoid]  .videoWidth;
+      hght = xy_ratio * width[vdoid];
+      wdth = width[vdoid];
+    }
+*/
+
+    var wdth;
+    var hght;
+    var xy_ratio = vid.videoWidth / vid.videoHeight;
+    var yx_ratio = vid.videoHeight / vid.videoWidth;
+
+    debugger;
+
+    if (width[vdoid] !== null) {
+      wdth = width[vdoid];
+      hght = vid.videoWidth * yx_ratio;
+    } else if (height[vdoid] !== null ) {
+      hght = height[vdoid];
+      wdth = vid.videoHeight * xy_ratio;
+    } else {
+      wdth = vid.videoWidth;
+      hght = vid.videoHeight;
+    }
+
+    vid.setAttribute('width', wdth);
+    vid.setAttribute('height', hght);
+
+    if (vdoid <= video.length - 1) {
+      //pop = "<video controls src='" + vdo[vdoid] + "'" + " height=" + height[vdoid] + " width=" + width[vdoid] + ">";
+      layer.bindPopup(vid, { width: wdth, height: hght, maxWidth: 2000 });
+      vdoid += 1;
+    }
+    //debugger;
+    //if (vdoid < name.length) { vdoid += 1 }
+  });
+
+};
+
+
+
+
+LeafletWidget.methods.iframePopup = function(source, group, width, height, src, name) {
+
+  var lay = this.layerManager._groupContainers[group];
+
+  //debugger;
+
+  var frm = [];
+  for (i = 0; i < source.length; i++) {
+    if (src[i] === "l") {
+      if (name.length === 1) {
+        frm[i] = document.getElementById("iframe" + "-" + name + "-attachment").href;
+      } else {
+        frm[i] = document.getElementById("iframe" + "-" + name[i] + "-attachment").href;
+      }
+    }
+    if (src[i] === "r") {
+      frm[i] = source[i];
+    }
+  }
+
+   //debugger;
+
+  var srcid = 0;
+  lay.eachLayer(function (layer) {
+    wdth = width;
+    hght = height;
+    if (srcid <= source.length) {
+      pop = "<iframe src='" +
+        frm[srcid] +
+        "' frameborder=0 width=" + wdth +
+        " height=" + hght +
+        "></iframe>";
+
+      layer.bindPopup(pop, { maxWidth: 2000 });
+    }
+    //debugger;
+    srcid += 1;
+  });
+
+};
+</script>
 
 </head>
 <body>
 <div id="htmlwidget_container">
-  <div id="htmlwidget-21089a933cc48267c4c5" style="width:100%;height:400px;" class="leaflet html-widget"></div>
+  <div id="htmlwidget-6375acd9a6a2b4ff1b21" style="width:100%;height:400px;" class="leaflet html-widget"></div>
 </div>
-<script type="application/json" data-for="htmlwidget-21089a933cc48267c4c5">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron",null,"OSM Cinza",{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addCircleMarkers","args":[[-12.92424223,-12.97896461,-12.97934608,-12.98381881,-12.96888592,-12.95608083,-12.94074157,-12.95580912,-12.97872384,-12.9257427,-12.97801322,-12.96452582,-12.94546991,-12.97570524,-12.93799887,-12.93469684,-12.92155299,-12.90420059,-12.9825204],[-38.46757599,-38.50778086,-38.49918661,-38.48365008,-38.47717151,-38.47216434,-38.47051876,-38.42907268,-38.46374445,-38.3811778,-38.47108033,-38.43625047,-38.42143452,-38.45786016,-38.40582272,-38.39452927,-38.35904445,-38.34114793,-38.51246811],10,null,"Estações",{"interactive":true,"className":"","stroke":true,"color":"#03F","weight":5,"opacity":0.8,"fill":true,"fillColor":"#03F","fillOpacity":0.4},null,null,"<image src=\"https://user-images.githubusercontent.com/105949705/175833769-5fd88cf3-45a8-456a-a3b3-34324df139ba.jpg\">",null,["Pirajá","C. da Pólvora","Brotas","Bonocô","Acesso Norte","Retiro","Bom Juá","CAB","Rodoviária","Bairro da Paz","Detran","Imbui","Pituaçu","Pernambués","Flamboyant","Tamburugy","Mussurunga","Aeroporto","Lapa"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addPolylines","args":[[[[{"lng":[-38.3411479295237,-38.3590444532789,-38.3811777989999,-38.3945292715578,-38.4058227223417,-38.4214345187839,-38.4290726799999,-38.4362504697293,-38.4578601638238,-38.463744455,-38.4710803334775,-38.477171515],"lat":[-12.9042005916595,-12.9215529936964,-12.925742698,-12.9346968437068,-12.9379988673487,-12.9454699071449,-12.955809121,-12.9645258243704,-12.9757052352352,-12.978723841,-12.9780132210914,-12.968885922]}]],[[{"lng":[-38.5124681053811,-38.5077808619999,-38.499186607,-38.483650081,-38.477171515],"lat":[-12.9825203968889,-12.9789646149999,-12.9793460779999,-12.983818815,-12.968885922]}],[{"lng":[-38.477171515,-38.4721643359999,-38.4705187559999,-38.467575993],"lat":[-12.968885922,-12.9560808269999,-12.940741573,-12.924242227]}]]],null,"Linhas",{"interactive":true,"className":"","stroke":true,"color":"#2284ff","weight":3,"opacity":0.5,"fill":false,"fillColor":"#2284ff","fillOpacity":0.2,"smoothFactor":1,"noClip":false},null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addLayersControl","args":[[],["Estações","Linhas"],{"collapsed":false,"autoZIndex":true,"position":"topright"}]}],"limits":{"lat":[-12.983818815,-12.90420059],"lng":[-38.51246811,-38.3411479295237]},"setView":[[-12.94505107,-38.42679262],12,[]]},"evals":[],"jsHooks":[]}</script>
-<script type="application/htmlwidget-sizing" data-for="htmlwidget-21089a933cc48267c4c5">{"viewer":{"width":"100%","height":400,"padding":0,"fill":true},"browser":{"width":"100%","height":400,"padding":0,"fill":true}}</script>
+<script type="application/json" data-for="htmlwidget-6375acd9a6a2b4ff1b21">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addProviderTiles","args":["CartoDB.Positron",null,"OSM Cinza",{"errorTileUrl":"","noWrap":false,"detectRetina":false}]},{"method":"addCircleMarkers","args":[[-12.924242227,-12.9789646149999,-12.9793460779999,-12.9838188149999,-12.968885922,-12.9560808269999,-12.940741573,-12.955809121,-12.978723841,-12.925742698,-12.9780132210914,-12.9645258243704,-12.9454699071449,-12.9757052352352,-12.9379988673487,-12.9346968437068,-12.9215529936964,-12.9042005916595,-12.9825203968889],[-38.467575993,-38.5077808619999,-38.499186607,-38.483650081,-38.477171515,-38.4721643359999,-38.4705187559999,-38.4290726799999,-38.463744455,-38.3811777989999,-38.4710803334775,-38.4362504697293,-38.4214345187839,-38.4578601638238,-38.4058227223417,-38.3945292715578,-38.3590444532789,-38.3411479295237,-38.5124681053811],10,null,"pnt",{"interactive":true,"className":"","stroke":true,"color":"#03F","weight":5,"opacity":0.5,"fill":true,"fillColor":"#03F","fillOpacity":0.2},null,null,null,null,["Pirajá","C. da Pólvora","Brotas","Bonocô","Acesso Norte","Retiro","Bom Juá","CAB","Rodoviária","Bairro da Paz","Detran","Imbui","Pituaçu","Pernambués","Flamboyant","Tamburugy","Mussurunga","Aeroporto","Lapa"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"imagePopup","args":[["https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177666294-c15b939a-e529-4101-a0fb-07396824bb2e.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177668552-fb94f918-a096-462d-b996-dd8fed769390.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png","https://user-images.githubusercontent.com/105949705/177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3.png"],"pnt",[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],["r","r","r","r","r","r","r","r","r","r","r","r","r","r","r","r","r","r","r"],["177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177666294-c15b939a-e529-4101-a0fb-07396824bb2e","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177668552-fb94f918-a096-462d-b996-dd8fed769390","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3","177664353-d427bfd7-27da-4c57-a9ed-5141f918c0e3"],false,{"maxWidth":2000}]},{"method":"addPolylines","args":[[[[{"lng":[-38.3411479295237,-38.3590444532789,-38.3811777989999,-38.3945292715578,-38.4058227223417,-38.4214345187839,-38.4290726799999,-38.4362504697293,-38.4578601638238,-38.463744455,-38.4710803334775,-38.477171515],"lat":[-12.9042005916595,-12.9215529936964,-12.925742698,-12.9346968437068,-12.9379988673487,-12.9454699071449,-12.955809121,-12.9645258243704,-12.9757052352352,-12.978723841,-12.9780132210914,-12.968885922]}]],[[{"lng":[-38.5124681053811,-38.5077808619999,-38.499186607,-38.483650081,-38.477171515],"lat":[-12.9825203968889,-12.9789646149999,-12.9793460779999,-12.983818815,-12.968885922]}],[{"lng":[-38.477171515,-38.4721643359999,-38.4705187559999,-38.467575993],"lat":[-12.968885922,-12.9560808269999,-12.940741573,-12.924242227]}]]],null,"Linhas",{"interactive":true,"className":"","stroke":true,"color":"#2284ff","weight":3,"opacity":0.5,"fill":false,"fillColor":"#2284ff","fillOpacity":0.2,"smoothFactor":1,"noClip":false},null,null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[-12.983818815,-12.9042005916595],"lng":[-38.5124681053811,-38.3411479295237]}},"evals":[],"jsHooks":[]}</script>
+<script type="application/htmlwidget-sizing" data-for="htmlwidget-6375acd9a6a2b4ff1b21">{"viewer":{"width":"100%","height":400,"padding":0,"fill":true},"browser":{"width":"100%","height":400,"padding":0,"fill":true}}</script>
 </body>
 </html>
